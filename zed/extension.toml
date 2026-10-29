@@ -7,9 +7,10 @@ description = "The Viso UI language: Tree-sitter highlighting, and diagnostics, 
 repository = "file:///Users/x/code/vizo/viso-vscode"
 
 [grammars.viso]
-# The grammar lives in this repository; `rev` is the commit Zed builds it from.
+# The grammar lives in this repository; `rev` is the commit Zed builds it from:
+# move it to the commit that last changed `tree-sitter-viso`.
 repository = "file:///Users/x/code/vizo/viso-vscode"
-rev = "HEAD"
+rev = "69ce9c4c96b39614b7fb6c173c180f40f575a135"
 path = "tree-sitter-viso"
 
 [language_servers.viso-lsp]
