@@ -17,7 +17,17 @@ function serverCommand() {
   return { command: "viso", args: ["lsp", "--stdio"] };
 }
 
-function startClient(context) {
+/** Stops the current client, whatever state it reached. */
+async function stopClient() {
+  const stopping = client;
+  client = undefined;
+  if (stopping) {
+    // A client that never started has nothing to stop; it rejects saying so.
+    await stopping.stop().catch(() => {});
+  }
+}
+
+function startClient() {
   const run = { ...serverCommand(), transport: TransportKind.stdio };
   client = new LanguageClient(
     "viso",
@@ -28,7 +38,6 @@ function startClient(context) {
       synchronize: { fileEvents: vscode.workspace.createFileSystemWatcher("**/*.vs") },
     },
   );
-  context.subscriptions.push(client);
   // A server that cannot start leaves the highlighting and the links; the
   // message names the setting that points at another one.
   return client.start().catch((error) => {
@@ -64,18 +73,17 @@ async function activate(context) {
   context.subscriptions.push(
     vscode.languages.registerDocumentLinkProvider({ language: "rust" }, viewLinks),
     vscode.commands.registerCommand("viso.restartServer", async () => {
-      if (client && client.isRunning()) {
-        await client.stop();
-      }
-      await startClient(context);
+      await stopClient();
+      await startClient();
     }),
+    { dispose: stopClient },
   );
-  await startClient(context);
+  await startClient();
   return { client: () => client };
 }
 
 function deactivate() {
-  return client ? client.stop() : undefined;
+  return stopClient();
 }
 
 module.exports = { activate, deactivate };

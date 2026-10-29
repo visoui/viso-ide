@@ -1,5 +1,5 @@
-// Inside VSCode: the fixture's diagnostics, hover, definition, formatting and
-// `view!` links, each from viso-lsp or the extension.
+// Inside VSCode: the fixture's diagnostics, hover, definition, semantic tokens,
+// completion, formatting and `view!` links, each from viso-lsp or the extension.
 
 const assert = require("assert");
 const path = require("path");
@@ -81,6 +81,51 @@ async function run() {
   assert.strictEqual(targets.length, 1);
   const target = targets[0].range || targets[0].targetSelectionRange || targets[0].targetRange;
   assert.strictEqual(target.start.line, at(counter, "bump").line);
+
+  const legend = await vscode.commands.executeCommand(
+    "vscode.provideDocumentSemanticTokensLegend",
+    counter.uri,
+  );
+  const tokens = await until(() =>
+    vscode.commands.executeCommand("vscode.provideDocumentSemanticTokens", counter.uri),
+  );
+  const classes = new Map();
+  let line = 0;
+  let character = 0;
+  for (let i = 0; i < tokens.data.length; i += 5) {
+    const [dLine, dStart, , type] = tokens.data.slice(i, i + 4);
+    line += dLine;
+    character = dLine ? dStart : character + dStart;
+    classes.set(`${line}:${character}`, legend.tokenTypes[type]);
+  }
+  const classOf = (word, nth) => {
+    const p = at(counter, word, nth).translate(0, -1);
+    return classes.get(`${p.line}:${p.character}`);
+  };
+  assert.strictEqual(classOf("count", 2), "property");
+  assert.strictEqual(classOf("Column"), "class");
+  assert.strictEqual(classOf("click {"), "event");
+  assert.strictEqual(classOf("view"), "keyword");
+
+  const draft = await vscode.workspace.openTextDocument({
+    language: "viso",
+    content: "component D {\n    view { Button { on  } }\n}\n",
+  });
+  const complete = async (character) => {
+    const list = await vscode.commands.executeCommand(
+      "vscode.executeCompletionItemProvider",
+      draft.uri,
+      new vscode.Position(1, character),
+    );
+    return list.items.map((item) => item.label.label || item.label);
+  };
+  const properties = await until(async () => {
+    const labels = await complete(20);
+    return labels.includes("text") ? labels : null;
+  });
+  assert.ok(properties.includes("Column"), properties.join(" "));
+  const events = await complete(23);
+  assert.ok(events.includes("click"), events.join(" "));
 
   const messy = await vscode.workspace.openTextDocument({
     language: "viso",
