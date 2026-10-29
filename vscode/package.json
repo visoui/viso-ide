@@ -1,20 +1,33 @@
 {
   "name": "viso",
   "displayName": "Viso",
-  "description": "The Viso UI language: highlighting, and diagnostics, hover, navigation, rename, formatting and completion from viso-lsp.",
+  "description": "The Viso UI language: highlighting, and diagnostics, hover, navigation, rename, formatting, completion and semantic tokens from viso-lsp, in .vs files and in ui!/component! bodies; the inspector and profiler over the Viso CLI.",
   "version": "0.1.0",
   "publisher": "viso",
   "license": "MIT OR Apache-2.0",
-  "engines": { "vscode": "^1.90.0" },
-  "categories": ["Programming Languages", "Formatters"],
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Formatters"
+  ],
   "main": "./extension.js",
-  "activationEvents": ["workspaceContains:**/Viso.toml"],
+  "activationEvents": [
+    "workspaceContains:**/Viso.toml",
+    "onLanguage:rust"
+  ],
   "contributes": {
     "languages": [
       {
         "id": "viso",
-        "aliases": ["Viso", "viso"],
-        "extensions": [".vs"],
+        "aliases": [
+          "Viso",
+          "viso"
+        ],
+        "extensions": [
+          ".vs"
+        ],
         "configuration": "./language-configuration.json"
       }
     ],
@@ -27,8 +40,12 @@
       {
         "scopeName": "source.rust.viso-injection",
         "path": "./syntaxes/viso-rust.injection.json",
-        "injectTo": ["source.rust"],
-        "embeddedLanguages": { "meta.embedded.block.viso": "viso" }
+        "injectTo": [
+          "source.rust"
+        ],
+        "embeddedLanguages": {
+          "meta.embedded.block.viso": "viso"
+        }
       }
     ],
     "configuration": {
@@ -41,18 +58,145 @@
         },
         "viso.trace.server": {
           "type": "string",
-          "enum": ["off", "messages", "verbose"],
+          "enum": [
+            "off",
+            "messages",
+            "verbose"
+          ],
           "default": "off",
           "description": "Traces the messages between the editor and viso-lsp."
+        },
+        "viso.cli.path": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "The `viso` the Inspector, Events and Profile views run. Empty: `viso` on the `PATH`."
+        },
+        "viso.inspect.target": {
+          "type": "string",
+          "enum": [
+            "",
+            "headless",
+            "ios",
+            "android",
+            "web-gpu",
+            "web-dom",
+            "web-hybrid"
+          ],
+          "default": "",
+          "markdownDescription": "The app the views ask: empty for the `viso run` session on this machine's own target, a target for that target's session, or `headless` for a headless run of the app."
+        },
+        "viso.profile.seconds": {
+          "type": "number",
+          "default": 5,
+          "minimum": 0.1,
+          "maximum": 3600,
+          "description": "How long Viso: Profile samples a running app."
+        },
+        "viso.inspect.scenario": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "The UI scenario a `headless` run plays, by its name under `tests/ui/`: events happen only while one plays. Empty: the app settling."
         }
       }
     },
     "commands": [
-      { "command": "viso.restartServer", "title": "Viso: Restart Language Server" }
-    ]
+      {
+        "command": "viso.restartServer",
+        "title": "Viso: Restart Language Server"
+      },
+      {
+        "command": "viso.inspectTree",
+        "title": "Viso: Inspect Tree",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "viso.followEvents",
+        "title": "Viso: Follow Events",
+        "icon": "$(play)"
+      },
+      {
+        "command": "viso.stopEvents",
+        "title": "Viso: Stop Following Events",
+        "icon": "$(debug-stop)"
+      },
+      {
+        "command": "viso.profile",
+        "title": "Viso: Profile",
+        "icon": "$(pulse)"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "viso",
+          "title": "Viso",
+          "icon": "media/viso.svg"
+        }
+      ]
+    },
+    "views": {
+      "viso": [
+        {
+          "id": "viso.tree",
+          "name": "Inspector"
+        },
+        {
+          "id": "viso.events",
+          "name": "Events"
+        },
+        {
+          "id": "viso.profile",
+          "name": "Profile"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "viso.tree",
+        "contents": "The nodes the app shows, each opening the source that declares it.\n[Inspect Tree](command:viso.inspectTree)"
+      },
+      {
+        "view": "viso.events",
+        "contents": "Input, focus and each node marked dirty, as they happen.\n[Follow Events](command:viso.followEvents)"
+      },
+      {
+        "view": "viso.profile",
+        "contents": "Frame timings and counters of the running app.\n[Profile](command:viso.profile)"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "viso.inspectTree",
+          "when": "view == viso.tree",
+          "group": "navigation"
+        },
+        {
+          "command": "viso.followEvents",
+          "when": "view == viso.events && !viso.following",
+          "group": "navigation"
+        },
+        {
+          "command": "viso.stopEvents",
+          "when": "view == viso.events && viso.following",
+          "group": "navigation"
+        },
+        {
+          "command": "viso.profile",
+          "when": "view == viso.profile",
+          "group": "navigation"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "viso.stopEvents",
+          "when": "viso.following"
+        }
+      ]
+    }
   },
   "scripts": {
-    "test": "node test/grammar.js && node test/run.js"
+    "test": "node test/units.js && node test/grammar.js && node test/run.js"
   },
   "dependencies": {
     "vscode-languageclient": "^9.0.1"

@@ -19,7 +19,11 @@ async function main() {
       vscodeExecutablePath: process.env.VSCODE_PATH || undefined,
       extensionDevelopmentPath: root,
       extensionTestsPath: path.join(__dirname, "suite.js"),
-      extensionTestsEnv: { VISO_LSP: process.env.VISO_LSP },
+      extensionTestsEnv: {
+        VISO_LSP: process.env.VISO_LSP,
+        VISO_CLI: process.env.VISO_CLI || "",
+        VISO_INSPECT_APP: process.env.VISO_INSPECT_APP || "",
+      },
       launchArgs: [
         path.join(root, "..", "fixtures", "app"),
         "--disable-extensions",

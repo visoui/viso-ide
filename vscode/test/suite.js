@@ -1,7 +1,11 @@
 // Inside VSCode: the fixture's diagnostics, hover, definition, semantic tokens,
-// completion, formatting and `view!` links, each from viso-lsp or the extension.
+// completion, formatting and `view!` links, each from viso-lsp or the extension;
+// completion and definition inside a `component!` body; and, given a `viso`
+// (`VISO_CLI`) and an app to build (`VISO_INSPECT_APP`), the Inspector and
+// Profile views over a headless run of it.
 
 const assert = require("assert");
+const fs = require("fs");
 const path = require("path");
 const vscode = require("vscode");
 
@@ -45,7 +49,7 @@ function at(document, word, nth = 0) {
 
 async function run() {
   const extension = vscode.extensions.getExtension("viso.viso");
-  await extension.activate();
+  const api = await extension.activate();
   await vscode.workspace
     .getConfiguration("viso")
     .update("server.path", process.env.VISO_LSP, vscode.ConfigurationTarget.Global);
@@ -148,6 +152,72 @@ async function run() {
     links.some((l) => l.target && l.target.fsPath === path.join(app, "counter.vs")),
     JSON.stringify(links),
   );
+
+  // Inside the `component!` body: `Text`'s properties, and `on` read in the
+  // view going to its `state`.
+  const inText = at(main, "text:").translate(0, -1);
+  const inBody = await until(async () => {
+    const list = await vscode.commands.executeCommand(
+      "vscode.executeCompletionItemProvider",
+      main.uri,
+      inText,
+    );
+    const labels = list.items.map((item) => item.label.label || item.label);
+    return labels.includes("text") ? labels : null;
+  });
+  assert.ok(inBody.includes("Column"), inBody.join(" "));
+  const declared = await vscode.commands.executeCommand(
+    "vscode.executeDefinitionProvider",
+    main.uri,
+    at(main, "on {"),
+  );
+  const state = declared.find((d) => (d.uri || d.targetUri).toString() === main.uri.toString());
+  assert.ok(state, JSON.stringify(declared));
+  assert.strictEqual((state.range || state.targetSelectionRange).start.line, at(main, "on =").line);
+
+  if (process.env.VISO_CLI && process.env.VISO_INSPECT_APP) {
+    await inspector(api.views);
+  }
+}
+
+/** The Inspector and Profile views over a headless run of the app. */
+async function inspector(views) {
+  const settings = vscode.workspace.getConfiguration("viso");
+  await settings.update("cli.path", process.env.VISO_CLI, vscode.ConfigurationTarget.Global);
+  await settings.update("inspect.target", "headless", vscode.ConfigurationTarget.Global);
+  const sources = path.join(process.env.VISO_INSPECT_APP, "src");
+  const vs = fs.readdirSync(sources).find((f) => f.endsWith(".vs"));
+  const document = await vscode.workspace.openTextDocument(path.join(sources, vs));
+  await vscode.window.showTextDocument(document);
+
+  await vscode.commands.executeCommand("viso.inspectTree");
+  const rows = [];
+  const walk = (row) => {
+    rows.push(row);
+    row.children.forEach(walk);
+  };
+  views.tree.rows.forEach(walk);
+  const declaredRow = rows.find((r) => r.command && r.command.command === "viso.openSource");
+  assert.ok(declaredRow, `no row with a source among ${rows.length}`);
+  await vscode.window.showTextDocument(main());
+  await vscode.commands.executeCommand(
+    declaredRow.command.command,
+    ...declaredRow.command.arguments,
+  );
+  const shown = vscode.window.activeTextEditor;
+  const span = declaredRow.command.arguments[1];
+  assert.strictEqual(shown.document.uri.fsPath, path.join(process.env.VISO_INSPECT_APP, span.file));
+  assert.strictEqual(shown.selection.start.line, span.line - 1);
+
+  await vscode.commands.executeCommand("viso.profile");
+  const [summary] = views.profile.rows;
+  assert.ok(summary && /^\d+ frames in \d+ ms$/.test(summary.label), summary && summary.label);
+  assert.ok(views.profile.rows.some((r) => r.label === "frame"));
+  console.log(`integration: inspector ${rows.length} nodes, profile ${summary.label}`);
+}
+
+function main() {
+  return vscode.workspace.textDocuments.find((d) => d.uri.fsPath.endsWith("main.rs"));
 }
 
 module.exports = {

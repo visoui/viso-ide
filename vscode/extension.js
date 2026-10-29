@@ -1,10 +1,13 @@
-// The Viso extension: the `.vs` language, `view!("x.vs")` links in Rust, and
-// viso-lsp as the language server. Everything past highlighting comes from
-// the server; the extension adds no analysis of its own.
+// The Viso extension: the `.vs` language, `view!("x.vs")` links and the DSL
+// bodies in Rust, viso-lsp as the language server, and the Inspector, Events
+// and Profile views over the CLI. Everything past highlighting comes from the
+// server or the CLI; the extension adds no analysis of its own.
 
 const path = require("path");
 const vscode = require("vscode");
 const { LanguageClient, TransportKind } = require("vscode-languageclient/node");
+const embedded = require("./embedded");
+const inspect = require("./inspect");
 
 let client;
 
@@ -36,6 +39,15 @@ function startClient() {
     {
       documentSelector: [{ language: "viso" }],
       synchronize: { fileEvents: vscode.workspace.createFileSystemWatcher("**/*.vs") },
+      middleware: {
+        // A Rust body's mirror is checked by rustc through the macro; its
+        // diagnostics would only repeat those, at the mirror's positions.
+        handleDiagnostics(uri, diagnostics, next) {
+          if (uri.scheme !== embedded.SCHEME) {
+            next(uri, diagnostics);
+          }
+        },
+      },
     },
   );
   // A server that cannot start leaves the highlighting and the links; the
@@ -78,8 +90,10 @@ async function activate(context) {
     }),
     { dispose: stopClient },
   );
+  embedded.register(context);
+  const views = inspect.register(context);
   await startClient();
-  return { client: () => client };
+  return { client: () => client, views };
 }
 
 function deactivate() {
