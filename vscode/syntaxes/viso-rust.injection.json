@@ -1,0 +1,52 @@
+{
+  "scopeName": "source.rust.viso-injection",
+  "injectionSelector": "L:source.rust -string -comment",
+  "patterns": [
+    {
+      "include": "#macro"
+    }
+  ],
+  "repository": {
+    "macro": {
+      "begin": "\\b(ui|component)(!)\\s*(\\{)",
+      "beginCaptures": {
+        "1": {
+          "name": "entity.name.function.macro.rust"
+        },
+        "2": {
+          "name": "entity.name.function.macro.rust"
+        },
+        "3": {
+          "name": "punctuation.brackets.curly.rust"
+        }
+      },
+      "end": "\\}",
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.brackets.curly.rust"
+        }
+      },
+      "contentName": "meta.embedded.block.viso",
+      "patterns": [
+        {
+          "include": "#braces"
+        },
+        {
+          "include": "source.viso"
+        }
+      ]
+    },
+    "braces": {
+      "begin": "\\{",
+      "end": "\\}",
+      "patterns": [
+        {
+          "include": "#braces"
+        },
+        {
+          "include": "source.viso"
+        }
+      ]
+    }
+  }
+}

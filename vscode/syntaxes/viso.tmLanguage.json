@@ -1,0 +1,269 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Viso",
+  "scopeName": "source.viso",
+  "fileTypes": [
+    "vs"
+  ],
+  "patterns": [
+    {
+      "include": "#comments"
+    },
+    {
+      "include": "#items"
+    },
+    {
+      "include": "#body"
+    }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.documentation.viso",
+          "match": "///.*$|//!.*$"
+        },
+        {
+          "name": "comment.line.double-slash.viso",
+          "match": "//.*$"
+        },
+        {
+          "include": "#block-comment"
+        }
+      ]
+    },
+    "block-comment": {
+      "name": "comment.block.viso",
+      "begin": "/\\*",
+      "end": "\\*/",
+      "patterns": [
+        {
+          "include": "#block-comment"
+        }
+      ]
+    },
+    "items": {
+      "patterns": [
+        {
+          "match": "\\b(component|system|record|enum|trait|shader|type)\\s+([A-Za-z_][A-Za-z0-9_]*)",
+          "captures": {
+            "1": {
+              "name": "keyword.declaration.viso"
+            },
+            "2": {
+              "name": "entity.name.type.viso"
+            }
+          }
+        },
+        {
+          "match": "\\b(style|theme)\\s+([A-Za-z_][A-Za-z0-9_]*)",
+          "captures": {
+            "1": {
+              "name": "keyword.declaration.viso"
+            },
+            "2": {
+              "name": "entity.name.type.viso"
+            }
+          }
+        },
+        {
+          "match": "\\b(fn|action|task)\\s+([A-Za-z_][A-Za-z0-9_]*)",
+          "captures": {
+            "1": {
+              "name": "keyword.declaration.function.viso"
+            },
+            "2": {
+              "name": "entity.name.function.viso"
+            }
+          }
+        }
+      ]
+    },
+    "body": {
+      "patterns": [
+        {
+          "include": "#comments"
+        },
+        {
+          "include": "#strings"
+        },
+        {
+          "include": "#numbers"
+        },
+        {
+          "name": "constant.other.color.viso",
+          "match": "#(?:[0-9A-Fa-f]{8}|[0-9A-Fa-f]{6}|[0-9A-Fa-f]{3,4})\\b"
+        },
+        {
+          "name": "storage.modifier.attribute.viso",
+          "match": "@[A-Za-z_][A-Za-z0-9_]*"
+        },
+        {
+          "include": "#items"
+        },
+        {
+          "name": "keyword.control.viso",
+          "match": "\\b(?:if|else|match|while|loop|for|in|return|break|continue|await)\\b"
+        },
+        {
+          "name": "constant.language.viso",
+          "match": "\\b(?:true|false|None)\\b"
+        },
+        {
+          "name": "variable.language.self.viso",
+          "match": "\\bself\\b"
+        },
+        {
+          "name": "storage.type.self.viso",
+          "match": "\\bSelf\\b"
+        },
+        {
+          "name": "keyword.other.viso",
+          "match": "\\b(?:component|system|record|enum|trait|impl|type|implements|where|const|fn|action|task|native|shader|import|export|as|let|mut|dyn)\\b"
+        },
+        {
+          "name": "invalid.illegal.reserved.viso",
+          "match": "\\b(?:child|store|merge|extend|inherit|class|macro|unsafe|extern|static|yield|try)\\b"
+        },
+        {
+          "match": "\\b(state|input|computed|event|slot|resource|effect|uniform|instance|varying|texture|sampler)\\s+(?=[A-Za-z_])",
+          "captures": {
+            "1": {
+              "name": "keyword.declaration.member.viso"
+            }
+          }
+        },
+        {
+          "match": "\\b(view|style|theme|template|part|fill)\\s*(?=\\{)",
+          "captures": {
+            "1": {
+              "name": "keyword.declaration.member.viso"
+            }
+          }
+        },
+        {
+          "match": "\\b(vertex|fragment|compute)\\s*(?=\\()",
+          "captures": {
+            "1": {
+              "name": "keyword.declaration.member.viso"
+            }
+          }
+        },
+        {
+          "match": "\\b(on)\\s+(?=[a-z_])",
+          "captures": {
+            "1": {
+              "name": "keyword.declaration.handler.viso"
+            }
+          }
+        },
+        {
+          "match": "\\b(emit|when|requires|capability|transaction|preserve|key|bind|using|use|override|replace|run|cleanup|start|move|load|policy|scope|empty|success|error|cancelled|node|capture|bubble)\\b(?=\\s*[A-Za-z_({\"])",
+          "captures": {
+            "1": {
+              "name": "keyword.other.contextual.viso"
+            }
+          }
+        },
+        {
+          "match": "\\b([A-Za-z_][A-Za-z0-9_]*)(::)",
+          "captures": {
+            "1": {
+              "name": "entity.name.namespace.viso"
+            },
+            "2": {
+              "name": "punctuation.separator.namespace.viso"
+            }
+          }
+        },
+        {
+          "match": "\\b([A-Z][A-Za-z0-9_]*)\\s*(?=\\{)",
+          "captures": {
+            "1": {
+              "name": "entity.name.tag.viso"
+            }
+          }
+        },
+        {
+          "name": "entity.name.type.viso",
+          "match": "\\b[A-Z][A-Za-z0-9_]*\\b"
+        },
+        {
+          "match": "\\b([a-z_][A-Za-z0-9_]*)\\s*(?=\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function.call.viso"
+            }
+          }
+        },
+        {
+          "match": "\\b([a-z_][A-Za-z0-9_]*)\\s*(?=:(?!:))",
+          "captures": {
+            "1": {
+              "name": "variable.other.property.viso"
+            }
+          }
+        },
+        {
+          "name": "keyword.operator.viso",
+          "match": "<=>|\\?\\?|\\?\\.|\\.\\.=?|->|=>|<<=?|>>=?|[=!<>]=|&&|\\|\\||[-+*/%&|^]=?|[!~<>=?]"
+        },
+        {
+          "name": "punctuation.terminator.viso",
+          "match": ";"
+        },
+        {
+          "name": "punctuation.separator.viso",
+          "match": ","
+        },
+        {
+          "name": "variable.other.viso",
+          "match": "\\b(?:r#)?[a-z_][A-Za-z0-9_]*\\b"
+        }
+      ]
+    },
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.raw.viso",
+          "begin": "r(#*)\"",
+          "end": "\"\\1"
+        },
+        {
+          "name": "string.quoted.double.viso",
+          "begin": "\"",
+          "end": "\"",
+          "patterns": [
+            {
+              "name": "constant.character.escape.viso",
+              "match": "\\\\(?:[nrt0\\\\\"'{}]|u\\{[0-9A-Fa-f]{1,6}\\})"
+            },
+            {
+              "name": "meta.interpolation.viso",
+              "match": "\\{[A-Za-z_0-9]*\\}"
+            }
+          ]
+        },
+        {
+          "name": "string.quoted.single.viso",
+          "match": "'(?:\\\\(?:[nrt0\\\\\"']|u\\{[0-9A-Fa-f]{1,6}\\})|[^'\\\\])'"
+        }
+      ]
+    },
+    "numbers": {
+      "patterns": [
+        {
+          "match": "\\b((?:0x[0-9A-Fa-f_]+|0o[0-7_]+|0b[01_]+|[0-9][0-9_]*(?:\\.[0-9][0-9_]*)?(?:[eE][+-]?[0-9_]+)?))(dp|px|sp|em|ns|us|ms|s|min|deg|rad|turn|hz|khz|%|[iu](?:8|16|32|64)|f32|f64)?(?![A-Za-z0-9_])",
+          "captures": {
+            "1": {
+              "name": "constant.numeric.viso"
+            },
+            "2": {
+              "name": "keyword.other.unit.viso"
+            }
+          }
+        }
+      ]
+    }
+  }
+}

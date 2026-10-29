@@ -1,0 +1,65 @@
+{
+  "name": "viso",
+  "displayName": "Viso",
+  "description": "The Viso UI language: highlighting, and diagnostics, hover, navigation, rename, formatting and completion from viso-lsp.",
+  "version": "0.1.0",
+  "publisher": "viso",
+  "license": "MIT OR Apache-2.0",
+  "engines": { "vscode": "^1.90.0" },
+  "categories": ["Programming Languages", "Formatters"],
+  "main": "./extension.js",
+  "activationEvents": ["workspaceContains:**/Viso.toml"],
+  "contributes": {
+    "languages": [
+      {
+        "id": "viso",
+        "aliases": ["Viso", "viso"],
+        "extensions": [".vs"],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "viso",
+        "scopeName": "source.viso",
+        "path": "./syntaxes/viso.tmLanguage.json"
+      },
+      {
+        "scopeName": "source.rust.viso-injection",
+        "path": "./syntaxes/viso-rust.injection.json",
+        "injectTo": ["source.rust"],
+        "embeddedLanguages": { "meta.embedded.block.viso": "viso" }
+      }
+    ],
+    "configuration": {
+      "title": "Viso",
+      "properties": {
+        "viso.server.path": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "The `viso-lsp` to run. Empty: `viso-lsp` beside `viso` on the `PATH`, through `viso lsp`."
+        },
+        "viso.trace.server": {
+          "type": "string",
+          "enum": ["off", "messages", "verbose"],
+          "default": "off",
+          "description": "Traces the messages between the editor and viso-lsp."
+        }
+      }
+    },
+    "commands": [
+      { "command": "viso.restartServer", "title": "Viso: Restart Language Server" }
+    ]
+  },
+  "scripts": {
+    "test": "node test/grammar.js && node test/run.js"
+  },
+  "dependencies": {
+    "vscode-languageclient": "^9.0.1"
+  },
+  "devDependencies": {
+    "@vscode/test-electron": "^2.4.1",
+    "vscode-textmate": "^9.1.0",
+    "vscode-oniguruma": "^2.0.1"
+  }
+}

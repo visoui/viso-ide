@@ -1,0 +1,14 @@
+{
+  "name": "tree-sitter-viso",
+  "version": "0.1.0",
+  "description": "Viso grammar for tree-sitter",
+  "main": "bindings/node",
+  "license": "MIT OR Apache-2.0",
+  "scripts": {
+    "generate": "tree-sitter generate",
+    "test": "tree-sitter test && cmp queries/highlights.scm ../zed/languages/viso/highlights.scm"
+  },
+  "devDependencies": {
+    "tree-sitter-cli": "^0.25.0"
+  }
+}

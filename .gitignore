@@ -1,0 +1,8 @@
+node_modules/
+/zed/target/
+*.wasm
+/tree-sitter-viso/build/
+/tree-sitter-viso/*.dylib
+/tree-sitter-viso/*.so
+/vscode/.vscode-test/
+*.vsix

@@ -1,0 +1,17 @@
+id = "viso"
+name = "Viso"
+version = "0.1.0"
+schema_version = 1
+authors = ["The Viso authors"]
+description = "The Viso UI language: Tree-sitter highlighting, and diagnostics, hover, navigation, rename, formatting and completion from viso-lsp."
+repository = "file:///Users/x/code/vizo/viso-vscode"
+
+[grammars.viso]
+# The grammar lives in this repository; `rev` is the commit Zed builds it from.
+repository = "file:///Users/x/code/vizo/viso-vscode"
+rev = "HEAD"
+path = "tree-sitter-viso"
+
+[language_servers.viso-lsp]
+name = "viso-lsp"
+languages = ["Viso"]
