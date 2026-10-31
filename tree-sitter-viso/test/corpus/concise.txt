@@ -338,3 +338,40 @@ component Page {
                 (primary_argument
                   (string
                     (string_content)))))))))))
+
+================================================================================
+Record pattern without a path
+================================================================================
+
+component App {
+    view {
+        Item { on opened({ id, at: _, .. }) { open(id) } }
+    }
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (component_declaration
+    name: (identifier)
+    body: (member_list
+      (view_declaration
+        body: (view_block
+          (node
+            type: (type_path
+              name: (type_identifier))
+            body: (node_body
+              (event_handler
+                event: (identifier)
+                (record_pattern
+                  (identifier)
+                  (identifier)
+                  (wildcard))
+                body: (block
+                  (expression_statement
+                    (call_expression
+                      function: (path
+                        (identifier))
+                      arguments: (arguments
+                        (path
+                          (identifier))))))))))))))

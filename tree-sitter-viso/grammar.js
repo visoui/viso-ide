@@ -734,6 +734,7 @@ module.exports = grammar({
         $.tuple_pattern,
         $.list_pattern,
         $.constructor_pattern,
+        $.record_pattern,
         $.qualified_pattern,
         $.integer,
         $.negative_integer,
@@ -758,17 +759,11 @@ module.exports = grammar({
     list_pattern: ($) =>
       seq("[", commaSep(choice($._pattern, seq("..", optional($.identifier)))), "]"),
     constructor_pattern: ($) =>
-      seq(
-        $.path,
-        choice(
-          seq("(", commaSep($._pattern), ")"),
-          seq(
-            "{",
-            commaSep(choice(seq($.identifier, ":", $._pattern), $.identifier, "..")),
-            "}",
-          ),
-        ),
-      ),
+      seq($.path, choice(seq("(", commaSep($._pattern), ")"), $._record_fields)),
+    // A record pattern with no path destructures the record it is matched against.
+    record_pattern: ($) => $._record_fields,
+    _record_fields: ($) =>
+      seq("{", commaSep(choice(seq($.identifier, ":", $._pattern), $.identifier, "..")), "}"),
 
     identifier: (_) => /(r#)?[A-Za-z_][A-Za-z0-9_]*/,
   },

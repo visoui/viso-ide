@@ -236,6 +236,10 @@
         "named": true
       },
       {
+        "type": "record_pattern",
+        "named": true
+      },
+      {
         "type": "string",
         "named": true
       },
@@ -2655,6 +2659,25 @@
         },
         {
           "type": "attribute",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "record_pattern",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "_pattern",
+          "named": true
+        },
+        {
+          "type": "identifier",
           "named": true
         }
       ]
