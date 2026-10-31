@@ -9,7 +9,11 @@
 (raw_string) @string
 (char) @string
 (escape_sequence) @string.escape
-(interpolation) @string.special
+(brace) @string.escape
+(hole_start) @string.special
+(hole_end) @string.special
+; What a hole reads is code, not text.
+(interpolation value: (path (identifier) @variable))
 (integer) @number
 (float) @number
 (negative_integer) @number
@@ -40,8 +44,13 @@
 (native_declaration name: (identifier) @type)
 (enum_variant name: (identifier) @variant)
 
-(node type: (type_path (type_identifier) @tag))
+((node type: (type_path (type_identifier) @tag))
+  (#match? @tag "^[A-Z]"))
+; A lower-case name in a node body fills the caller's named slot.
+((node type: (type_path (type_identifier) @label))
+  (#match? @label "^[a-z_]"))
 (node name: (identifier) @label)
+(slot name: (identifier) @label)
 
 (function_declaration name: (identifier) @function)
 (call_expression function: (path (identifier) @function .))

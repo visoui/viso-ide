@@ -1,0 +1,340 @@
+==================
+Items end at a line break
+==================
+
+record Step {
+    index: I64 = 0
+    text: String
+}
+
+enum Course {
+    breakfast
+    dinner
+}
+
+component Tally {
+    input step: I64 = 1
+    state count = 0
+    event changed(value: I64)
+    action bump() {
+        count += step
+        emit changed(count)
+    }
+    view { Text("") }
+}
+
+---
+
+(source_file
+  (record_declaration
+    (identifier)
+    (field_list
+      (record_field
+        (identifier)
+        (type_path
+          (type_identifier))
+        (integer))
+      (record_field
+        (identifier)
+        (type_path
+          (type_identifier)))))
+  (enum_declaration
+    (identifier)
+    (enum_variant
+      (identifier))
+    (enum_variant
+      (identifier)))
+  (component_declaration
+    (identifier)
+    (member_list
+      (input_declaration
+        (identifier)
+        (type_path
+          (type_identifier))
+        (integer))
+      (state_declaration
+        (identifier)
+        (integer))
+      (event_declaration
+        (identifier)
+        (identifier)
+        (type_path
+          (type_identifier)))
+      (function_declaration
+        (identifier)
+        (parameters)
+        (block
+          (assignment_statement
+            (path
+              (identifier))
+            (path
+              (identifier)))
+          (emit_statement
+            (identifier)
+            (arguments
+              (path
+                (identifier))))))
+      (view_declaration
+        (view_block
+          (node
+            (type_path
+              (type_identifier))
+            (primary_argument
+              (string))))))))
+
+==================
+Semicolons still separate items on one line
+==================
+
+component Row {
+    view { Column { width: fill; gap: 4dp } }
+}
+
+---
+
+(source_file
+  (component_declaration
+    (identifier)
+    (member_list
+      (view_declaration
+        (view_block
+          (node
+            (type_path
+              (type_identifier))
+            (node_body
+              (property
+                (property_path
+                  (identifier))
+                (path
+                  (identifier)))
+              (property
+                (property_path
+                  (identifier))
+                (unit_literal)))))))))
+
+==================
+Record fields and match arms a line each
+==================
+
+fn f(n: I64) -> Step {
+    let label = match n {
+        0 => "none"
+        _ => "some"
+    }
+    Step {
+        index: n
+        text: label
+    }
+}
+
+---
+
+(source_file
+  (function_declaration
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (type_path
+          (type_identifier))))
+    (type_path
+      (type_identifier))
+    (block
+      (let_statement
+        (identifier_pattern
+          (identifier))
+        (match_expression
+          (path
+            (identifier))
+          (match_arm
+            (integer)
+            (string
+              (string_content)))
+          (match_arm
+            (wildcard)
+            (string
+              (string_content)))))
+      (expression_statement
+        (record_expression
+          (path
+            (identifier))
+          (identifier)
+          (path
+            (identifier))
+          (identifier)
+          (path
+            (identifier)))))))
+
+==================
+String holes hold expressions
+==================
+
+fn f(n: I64) -> String {
+    "{n} of {n * 2}, {{literal}}"
+}
+
+---
+
+(source_file
+  (function_declaration
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (type_path
+          (type_identifier))))
+    (type_path
+      (type_identifier))
+    (block
+      (expression_statement
+        (string
+          (interpolation
+            (hole_start)
+            (path
+              (identifier))
+            (hole_end))
+          (string_content)
+          (interpolation
+            (hole_start)
+            (binary_expression
+              (path
+                (identifier))
+              (integer))
+            (hole_end))
+          (string_content)
+          (brace)
+          (string_content)
+          (brace))))))
+
+==================
+Primary arguments
+==================
+
+component Hello {
+    view {
+        Column {
+            Text("Hello") { font_size: 20sp }
+            Button(tr("save")) { on click { save() } }
+            Divider
+        }
+    }
+}
+
+---
+
+(source_file
+  (component_declaration
+    (identifier)
+    (member_list
+      (view_declaration
+        (view_block
+          (node
+            (type_path
+              (type_identifier))
+            (node_body
+              (node
+                (type_path
+                  (type_identifier))
+                (primary_argument
+                  (string
+                    (string_content)))
+                (node_body
+                  (property
+                    (property_path
+                      (identifier))
+                    (unit_literal))))
+              (node
+                (type_path
+                  (type_identifier))
+                (primary_argument
+                  (call_expression
+                    (path
+                      (identifier))
+                    (arguments
+                      (string
+                        (string_content)))))
+                (node_body
+                  (event_handler
+                    (identifier)
+                    (block
+                      (expression_statement
+                        (call_expression
+                          (path
+                            (identifier))
+                          (arguments)))))))
+              (node
+                (type_path
+                  (type_identifier))))))))))
+
+==================
+Slots and their fills
+==================
+
+component Card {
+    view {
+        Column {
+            slot header
+            slot
+            slot footer { Text("end") }
+        }
+    }
+}
+
+component Page {
+    view {
+        Card {
+            header { Text("Title") }
+            Text("body")
+        }
+    }
+}
+
+---
+
+(source_file
+  (component_declaration
+    (identifier)
+    (member_list
+      (view_declaration
+        (view_block
+          (node
+            (type_path
+              (type_identifier))
+            (node_body
+              (slot
+                (identifier))
+              (slot)
+              (slot
+                (identifier)
+                (view_block
+                  (node
+                    (type_path
+                      (type_identifier))
+                    (primary_argument
+                      (string
+                        (string_content))))))))))))
+  (component_declaration
+    (identifier)
+    (member_list
+      (view_declaration
+        (view_block
+          (node
+            (type_path
+              (type_identifier))
+            (node_body
+              (node
+                (type_path
+                  (type_identifier))
+                (node_body
+                  (node
+                    (type_path
+                      (type_identifier))
+                    (primary_argument
+                      (string
+                        (string_content))))))
+              (node
+                (type_path
+                  (type_identifier))
+                (primary_argument
+                  (string
+                    (string_content)))))))))))

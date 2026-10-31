@@ -627,18 +627,7 @@
   {
     "type": "block",
     "named": true,
-    "fields": {
-      "tail": {
-        "multiple": false,
-        "required": false,
-        "types": [
-          {
-            "type": "_expression",
-            "named": true
-          }
-        ]
-      }
-    },
+    "fields": {},
     "children": {
       "multiple": true,
       "required": false,
@@ -1806,6 +1795,36 @@
     }
   },
   {
+    "type": "interpolation",
+    "named": true,
+    "fields": {
+      "value": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "_expression",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "hole_end",
+          "named": true
+        },
+        {
+          "type": "hole_start",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "let_statement",
     "named": true,
     "fields": {
@@ -2138,7 +2157,7 @@
     "fields": {
       "body": {
         "multiple": false,
-        "required": true,
+        "required": false,
         "types": [
           {
             "type": "node_body",
@@ -2152,6 +2171,16 @@
         "types": [
           {
             "type": "identifier",
+            "named": true
+          }
+        ]
+      },
+      "primary": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "primary_argument",
             "named": true
           }
         ]
@@ -2206,6 +2235,10 @@
         },
         {
           "type": "property",
+          "named": true
+        },
+        {
+          "type": "slot",
           "named": true
         },
         {
@@ -2397,6 +2430,21 @@
       "types": [
         {
           "type": "identifier",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "primary_argument",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "_expression",
           "named": true
         }
       ]
@@ -2846,6 +2894,32 @@
     }
   },
   {
+    "type": "slot",
+    "named": true,
+    "fields": {
+      "name": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "identifier",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": false,
+      "required": false,
+      "types": [
+        {
+          "type": "view_block",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "slot_declaration",
     "named": true,
     "fields": {
@@ -2989,6 +3063,10 @@
       "multiple": true,
       "required": false,
       "types": [
+        {
+          "type": "brace",
+          "named": true
+        },
         {
           "type": "escape_sequence",
           "named": true
@@ -3546,6 +3624,10 @@
           "named": true
         },
         {
+          "type": "slot",
+          "named": true
+        },
+        {
           "type": "template_use",
           "named": true
         },
@@ -3976,6 +4058,10 @@
     "extra": true
   },
   {
+    "type": "brace",
+    "named": true
+  },
+  {
     "type": "break",
     "named": false
   },
@@ -4093,6 +4179,14 @@
     "named": false
   },
   {
+    "type": "hole_end",
+    "named": true
+  },
+  {
+    "type": "hole_start",
+    "named": true
+  },
+  {
     "type": "identifier",
     "named": true
   },
@@ -4126,10 +4220,6 @@
   },
   {
     "type": "integer",
-    "named": true
-  },
-  {
-    "type": "interpolation",
     "named": true
   },
   {

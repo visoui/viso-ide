@@ -1,4 +1,4 @@
-import viso::math::Vec2F32;
+import viso::math::Vec2F32
 // <- keyword
 //     ^ namespace
 
@@ -7,49 +7,65 @@ import viso::math::Vec2F32;
 component Counter {
 // <- keyword
 //        ^ type
-    input step: I32 = 1;
+    input step: I32 = 1
 //  ^ keyword
 //        ^ property
 //              ^ type
 //                    ^ number
-    state count = 0;
+    state count = 0
 //  ^ keyword
 //        ^ property
-    event changed(to: I32);
+    event changed(to: I32)
 //        ^ function
 
     action bump() {
 //  ^ keyword
 //         ^ function
-        count += step;
+        count += step
 //            ^ operator
-        emit changed(to: count);
+        emit changed(count)
 //      ^ keyword
 //           ^ function
-//                   ^ property
     }
 
     view {
 //  ^ keyword
         Column {
 //      ^ tag
-            padding: 16dp;
+            padding: 16dp; background: #1e88e5
 //          ^ property
 //                   ^ number
-            background: #1e88e5;
-//                      ^ constant
-            Text { text: format("{n} clicks", n: count); }
+//                         ^ property
+//                                     ^ constant
+            Text("{count} clicks, {{n}}") { font_size: 13sp }
 //          ^ tag
-//                       ^ function
-//                               ^ string.special
-            Button { text: "Add"; on click { bump(); } }
-//                         ^ string
-//                                ^ keyword
-//                                   ^ function
+//                ^ string.special
+//                 ^ variable
+//                      ^ string.special
+//                        ^ string
+//                                ^ string.escape
+            Button("Add") { on click { bump() } }
+//                 ^ string
+//                          ^ keyword
+//                                     ^ function
             if count > 3 {
 //          ^ keyword
-                Text { text: "many"; }
+                Text("many")
             }
+            slot
+//          ^ keyword
+            slot footer { Text("end") }
+//          ^ keyword
+//               ^ label
+        }
+    }
+}
+
+component Page {
+    view {
+        Card {
+            footer { Text("Title") }
+//          ^ label
         }
     }
 }
@@ -57,13 +73,12 @@ component Counter {
 shader Ripple {
 // <- keyword
 //     ^ type
-    uniform time: F32;
+    uniform time: F32
 //  ^ keyword
-    vertex(vertex_id: U32) -> VertexOutput {
+    fragment(frag_coord: Vec4F32) -> ColorLinear {
 //  ^ keyword
-//         ^ variable.parameter
-        return VertexOutput { clip_position: to_clip(time) };
+//           ^ variable.parameter
+        return ColorLinear(time, 0.0, 0.0, 1.0)
 //      ^ keyword
-//                            ^ property
     }
 }

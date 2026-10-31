@@ -3,9 +3,9 @@ Component with a view
 ==================
 
 component Counter {
-    state count = 0;
+    state count = 0
     view {
-        Column { gap: 8dp; Text { text: "hi"; } }
+        Column { gap: 8dp; Text("hi") }
     }
 }
 
@@ -13,31 +13,33 @@ component Counter {
 
 (source_file
   (component_declaration
-    name: (identifier)
-    body: (member_list
+    (identifier)
+    (member_list
       (state_declaration
-        name: (identifier)
-        value: (integer))
+        (identifier)
+        (integer))
       (view_declaration
-        body: (view_block
+        (view_block
           (node
-            type: (type_path name: (type_identifier))
-            body: (node_body
+            (type_path
+              (type_identifier))
+            (node_body
               (property
-                name: (property_path (identifier))
-                value: (unit_literal))
+                (property_path
+                  (identifier))
+                (unit_literal))
               (node
-                type: (type_path name: (type_identifier))
-                body: (node_body
-                  (property
-                    name: (property_path (identifier))
-                    value: (string (string_content))))))))))))
+                (type_path
+                  (type_identifier))
+                (primary_argument
+                  (string
+                    (string_content)))))))))))
 
 ==================
 Import list
 ==================
 
-import viso::game::{FixedUpdate, FixedFrame as Frame};
+import viso::game::{FixedUpdate, FixedFrame as Frame}
 
 ---
 
@@ -45,16 +47,19 @@ import viso::game::{FixedUpdate, FixedFrame as Frame};
   (import_declaration
     (identifier)
     (identifier)
-    (import_item name: (identifier))
-    (import_item name: (identifier) alias: (identifier))))
+    (import_item
+      (identifier))
+    (import_item
+      (identifier)
+      (identifier))))
 
 ==================
 Statements and expressions
 ==================
 
 fn f(x: I32) -> I32 {
-    let y = x * 2 + 1;
-    if y > 3 { return y; }
+    let y = x * 2 + 1
+    if y > 3 { return y }
     match y { 0 => 1, _ => y ?? 0 }
 }
 
@@ -62,29 +67,43 @@ fn f(x: I32) -> I32 {
 
 (source_file
   (function_declaration
-    name: (identifier)
-    parameters: (parameters
-      (parameter name: (identifier) type: (type_path name: (type_identifier))))
-    return_type: (type_path name: (type_identifier))
-    body: (block
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (type_path
+          (type_identifier))))
+    (type_path
+      (type_identifier))
+    (block
       (let_statement
-        pattern: (identifier_pattern (identifier))
-        value: (binary_expression
-          left: (binary_expression
-            left: (path (identifier))
-            right: (integer))
-          right: (integer)))
+        (identifier_pattern
+          (identifier))
+        (binary_expression
+          (binary_expression
+            (path
+              (identifier))
+            (integer))
+          (integer)))
       (if_statement
-        condition: (binary_expression
-          left: (path (identifier))
-          right: (integer))
-        consequence: (block
-          (return_statement (path (identifier)))))
-      (match_statement
-        value: (path (identifier))
-        (match_arm pattern: (integer) value: (integer))
-        (match_arm
-          pattern: (wildcard)
-          value: (binary_expression
-            left: (path (identifier))
-            right: (integer)))))))
+        (binary_expression
+          (path
+            (identifier))
+          (integer))
+        (block
+          (return_statement
+            (path
+              (identifier)))))
+      (expression_statement
+        (match_expression
+          (path
+            (identifier))
+          (match_arm
+            (integer)
+            (integer))
+          (match_arm
+            (wildcard)
+            (binary_expression
+              (path
+                (identifier))
+              (integer))))))))

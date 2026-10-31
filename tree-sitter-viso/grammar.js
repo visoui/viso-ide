@@ -2,7 +2,9 @@
  * Tree-sitter grammar for Viso `.vs` files, after Appendix A of the Viso DSL
  * specification. It is the editors' grammar: it shapes a file for
  * highlighting, folding, indentation and outlines, and accepts some programs
- * the compiler rejects. Diagnostics come from viso-lsp.
+ * the compiler rejects. Diagnostics come from viso-lsp. An item ends at a
+ * line break or a `;`: line breaks are whitespace here, so every `;` is
+ * optional and the parser ends an item where the next one starts.
  */
 
 const PREC = {
@@ -28,6 +30,11 @@ const UNITS = ["dp", "px", "sp", "em", "ns", "us", "ms", "s", "min", "deg", "rad
 
 const commaSep = (rule) => optional(seq(rule, repeat(seq(",", rule)), optional(",")));
 const commaSep1 = (rule) => seq(rule, repeat(seq(",", rule)), optional(","));
+// Items a comma or a line break separates (the line break is whitespace here).
+const lineSep = (rule) => optional(seq(rule, repeat(seq(optional(","), rule)), optional(",")));
+const lineSep1 = (rule) => seq(rule, repeat(seq(optional(","), rule)), optional(","));
+// An item ends at a line break or a `;`.
+const end = optional(";");
 
 module.exports = grammar({
   name: "viso",
@@ -44,9 +51,6 @@ module.exports = grammar({
     [$._type_segment, $.start_statement],
     [$._expression, $.record_expression],
     [$.path],
-    [$._pattern, $._expression],
-    [$.identifier_pattern, $._expression],
-    [$.block, $.record_expression],
     [$.if_statement, $.if_expression],
     [$.match_statement, $.match_expression],
   ],
@@ -73,7 +77,7 @@ module.exports = grammar({
             seq("::", "{", commaSep1($.import_item), "}"),
           ),
         ),
-        ";",
+        end,
       ),
     module_path: ($) => prec.right(seq($.identifier, repeat(seq("::", $.identifier)))),
     import_item: ($) => seq(field("name", $.identifier), optional(seq("as", field("alias", $.identifier)))),
@@ -163,7 +167,7 @@ module.exports = grammar({
         ":",
         field("type", $._type),
         optional(seq("=", $._expression)),
-        ";",
+        end,
       ),
     enum_declaration: ($) =>
       seq(
@@ -181,7 +185,7 @@ module.exports = grammar({
         repeat($.attribute),
         field("name", $.identifier),
         optional(choice(seq("(", commaSep($._type), ")"), $.field_list)),
-        ";",
+        end,
       ),
     trait_declaration: ($) =>
       seq(
@@ -213,9 +217,9 @@ module.exports = grammar({
         "}",
       ),
     associated_type: ($) =>
-      seq("type", field("name", $.identifier), optional(seq(":", $.trait_bounds)), optional(seq("=", $._type)), ";"),
+      seq("type", field("name", $.identifier), optional(seq(":", $.trait_bounds)), optional(seq("=", $._type)), end),
     type_alias: ($) =>
-      seq("type", field("name", $.identifier), optional($.generic_parameters), "=", field("type", $._type), ";"),
+      seq("type", field("name", $.identifier), optional($.generic_parameters), "=", field("type", $._type), end),
     const_declaration: ($) =>
       seq(
         "const",
@@ -223,7 +227,7 @@ module.exports = grammar({
         ":",
         field("type", $._type),
         optional(seq("=", field("value", $._expression))),
-        ";",
+        end,
       ),
 
     // --- Callables ---------------------------------------------------------
@@ -237,7 +241,7 @@ module.exports = grammar({
         optional(seq("->", field("return_type", $._type))),
         optional($.where_clause),
         optional($.capability_clause),
-        choice(field("body", $.block), ";"),
+        optional(choice(field("body", $.block), ";")),
       ),
     parameters: ($) => seq("(", commaSep(choice($.self_parameter, $.parameter)), ")"),
     self_parameter: ($) => seq(optional("mut"), $.self, optional(seq(":", $._type))),
@@ -262,7 +266,7 @@ module.exports = grammar({
             optional($.generic_parameters),
             optional(seq(":", $.trait_bounds)),
             optional($.where_clause),
-            ";",
+            end,
           ),
         ),
       ),
@@ -303,15 +307,15 @@ module.exports = grammar({
         $.view_declaration,
       ),
     input_declaration: ($) =>
-      seq("input", field("name", $.identifier), ":", field("type", $._type), optional(seq("=", field("default", $._expression))), ";"),
+      seq("input", field("name", $.identifier), ":", field("type", $._type), optional(seq("=", field("default", $._expression))), end),
     state_declaration: ($) =>
-      seq("state", field("name", $.identifier), optional(seq(":", field("type", $._type))), "=", field("value", $._expression), ";"),
+      seq("state", field("name", $.identifier), optional(seq(":", field("type", $._type))), "=", field("value", $._expression), end),
     computed_declaration: ($) =>
-      seq("computed", field("name", $.identifier), optional(seq(":", field("type", $._type))), "=", field("value", $._expression), ";"),
+      seq("computed", field("name", $.identifier), optional(seq(":", field("type", $._type))), "=", field("value", $._expression), end),
     event_declaration: ($) =>
-      seq("event", field("name", $.identifier), "(", commaSep(seq(field("parameter", $.identifier), ":", $._type)), ")", ";"),
+      seq("event", field("name", $.identifier), "(", commaSep(seq(field("parameter", $.identifier), ":", $._type)), ")", end),
     slot_declaration: ($) =>
-      seq("slot", field("name", $.identifier), ":", field("type", $._type), optional(seq("=", choice($.none, "empty"))), ";"),
+      seq("slot", field("name", $.identifier), ":", field("type", $._type), optional(seq("=", choice($.none, "empty"))), end),
     effect_declaration: ($) =>
       seq(
         "effect",
@@ -330,7 +334,7 @@ module.exports = grammar({
         ":",
         field("type", $._type),
         "{",
-        repeat(seq(choice("load", "key", "policy", "scope"), "=", $._expression, ";")),
+        repeat(seq(choice("load", "key", "policy", "scope"), "=", $._expression, end)),
         "}",
       ),
 
@@ -341,14 +345,24 @@ module.exports = grammar({
     _view_item: ($) =>
       seq(
         repeat($.attribute),
-        choice($.node, $.view_if, $.view_for, $.view_match, $.template_use),
+        choice($.node, $.slot, $.view_if, $.view_for, $.view_match, $.template_use),
       ),
+    // `Text("Hi") { .. }`: a type, its primary property's value in
+    // parentheses, and a body; either may be left out.
     node: ($) =>
-      seq(
-        optional(seq(choice("node", "part"), field("name", $.identifier), ":")),
-        field("type", $.type_path),
-        field("body", $.node_body),
+      prec.right(
+        seq(
+          optional(seq(choice("node", "part"), field("name", $.identifier), ":")),
+          field("type", $.type_path),
+          optional(field("primary", $.primary_argument)),
+          optional(field("body", $.node_body)),
+        ),
       ),
+    primary_argument: ($) => seq("(", $._expression, ")"),
+    // Where a component's view places what its callers put in it: `slot`,
+    // the default one, or `slot name`, with what shows while it is empty.
+    // A caller fills a named one with `name { .. }`, which reads as a node.
+    slot: ($) => prec.right(seq("slot", optional(field("name", $.identifier)), optional($.view_block))),
     node_body: ($) => seq("{", repeat(seq(repeat($.attribute), $._node_member)), "}"),
     _node_member: ($) =>
       choice(
@@ -357,6 +371,7 @@ module.exports = grammar({
         $.event_handler,
         $.fill,
         $.node,
+        $.slot,
         $.view_if,
         $.view_for,
         $.view_match,
@@ -364,10 +379,10 @@ module.exports = grammar({
         $.part_override,
         $.part_replace,
       ),
-    property: ($) => seq(field("name", $.property_path), ":", field("value", $._expression), ";"),
+    property: ($) => seq(field("name", $.property_path), ":", field("value", $._expression), end),
     property_path: ($) => seq($.identifier, repeat(seq(".", $.identifier))),
     binding: ($) =>
-      seq("bind", field("name", $.property_path), "<=>", field("value", $._expression), optional(seq("using", $.type_path)), ";"),
+      seq("bind", field("name", $.property_path), "<=>", field("value", $._expression), optional(seq("using", $.type_path)), end),
     event_handler: ($) =>
       seq(
         "on",
@@ -388,7 +403,7 @@ module.exports = grammar({
     view_for: ($) =>
       seq("for", field("pattern", $._pattern), "in", field("items", $._expression), "key", field("key", $._expression), $.view_block),
     view_match: ($) =>
-      seq("match", field("value", $._expression), "{", commaSep1($.view_match_arm), "}"),
+      seq("match", field("value", $._expression), "{", lineSep1($.view_match_arm), "}"),
     view_match_arm: ($) => seq($._pattern, optional(seq("if", $._expression)), "=>", $.view_block),
     part_override: ($) =>
       seq("override", "part", field("name", $.identifier), "{", repeat(choice($.property, $.binding, $.event_handler)), "}"),
@@ -413,7 +428,7 @@ module.exports = grammar({
         field("template", $.type_path),
         $.arguments,
         optional(seq("{", repeat(choice($.fill, $.part_override, $.part_replace)), "}")),
-        ";",
+        end,
       ),
     style_declaration: ($) =>
       seq(
@@ -444,7 +459,7 @@ module.exports = grammar({
         repeat($.theme_item),
         "}",
       ),
-    theme_item: ($) => seq(field("name", $.identifier), "=", field("value", $._expression), ";"),
+    theme_item: ($) => seq(field("name", $.identifier), "=", field("value", $._expression), end),
 
     // --- Shaders ---------------------------------------------------------
 
@@ -464,7 +479,7 @@ module.exports = grammar({
         field("name", $.identifier),
         ":",
         field("type", $._type),
-        ";",
+        end,
       ),
     shader_entry: ($) =>
       seq(
@@ -477,7 +492,7 @@ module.exports = grammar({
 
     // --- Blocks and statements ---------------------------------------------
 
-    block: ($) => seq("{", repeat($._statement), optional(field("tail", $._expression)), "}"),
+    block: ($) => seq("{", repeat($._statement), "}"),
 
     _statement: ($) =>
       seq(
@@ -500,21 +515,21 @@ module.exports = grammar({
         ),
       ),
     let_statement: ($) =>
-      seq("let", optional("mut"), field("pattern", $._pattern), optional(seq(":", field("type", $._type))), "=", field("value", $._expression), ";"),
+      seq("let", optional("mut"), field("pattern", $._pattern), optional(seq(":", field("type", $._type))), "=", field("value", $._expression), end),
     assignment_statement: ($) =>
       seq(
         field("target", $._expression),
         field("operator", choice("=", "+=", "-=", "*=", "/=", "%=", "&=", "|=", "^=", "<<=", ">>=")),
         field("value", $._expression),
-        ";",
+        end,
       ),
-    expression_statement: ($) => seq($._expression, ";"),
-    return_statement: ($) => seq("return", optional($._expression), ";"),
-    break_statement: ($) => seq("break", optional($._expression), ";"),
-    continue_statement: (_) => seq("continue", ";"),
-    emit_statement: ($) => seq("emit", field("event", $.identifier), $.arguments, ";"),
+    expression_statement: ($) => seq($._expression, end),
+    return_statement: ($) => prec.right(seq("return", optional($._expression), end)),
+    break_statement: ($) => prec.right(seq("break", optional($._expression), end)),
+    continue_statement: (_) => seq("continue", end),
+    emit_statement: ($) => seq("emit", field("event", $.identifier), $.arguments, end),
     start_statement: ($) =>
-      seq(
+      prec.right(seq(
         "start",
         field("task", $._expression),
         optional(seq("as", field("name", $.identifier))),
@@ -523,7 +538,7 @@ module.exports = grammar({
             "{",
             repeat(
               choice(
-                seq("policy", "=", $._expression, ";"),
+                seq("policy", "=", $._expression, end),
                 seq(choice("success", "error"), "(", $._pattern, ")", $.block),
                 seq("cancelled", $.block),
               ),
@@ -531,8 +546,8 @@ module.exports = grammar({
             "}",
           ),
         ),
-        ";",
-      ),
+        end,
+      )),
     transaction_statement: ($) => seq("transaction", $.block),
     if_statement: ($) =>
       prec.right(
@@ -608,11 +623,14 @@ module.exports = grammar({
     string: ($) =>
       seq(
         '"',
-        repeat(choice($.string_content, $.escape_sequence, $.interpolation)),
+        repeat(choice($.string_content, $.escape_sequence, $.brace, $.interpolation)),
         token.immediate('"'),
       ),
-    string_content: (_) => token.immediate(prec(1, /[^"\\{]+|\{/)),
-    interpolation: (_) => token.immediate(prec(2, /\{[A-Za-z_0-9]*(:[^}"]*)?\}/)),
+    string_content: (_) => token.immediate(prec(1, /[^"\\{}]+/)),
+    // `{{` and `}}` are braces; `{expr}` is a hole, its value shown as text.
+    brace: (_) => token.immediate(prec(2, choice("{{", "}}"))),
+    interpolation: ($) =>
+      seq(alias(token.immediate("{"), $.hole_start), field("value", $._expression), alias("}", $.hole_end)),
     escape_sequence: (_) => token.immediate(seq("\\", choice(/[nrt0\\"'{}]/, /u\{[0-9A-Fa-f]{1,6}\}/))),
     raw_string: (_) => token(choice(seq('r"', /[^"]*/, '"'), seq('r#"', /([^"]|"[^#])*/, '"#'))),
     char: (_) => token(seq("'", choice(/[^'\\]/, seq("\\", choice(/[nrt0\\"']/, /u\{[0-9A-Fa-f]{1,6}\}/))), "'")),
@@ -628,7 +646,7 @@ module.exports = grammar({
         field("type", $.path),
         optional(seq("::", $.generic_arguments)),
         "{",
-        commaSep(
+        lineSep(
           choice(
             seq(field("field", $.identifier), ":", $._expression),
             field("field", $.identifier),
@@ -649,7 +667,7 @@ module.exports = grammar({
         ),
       ),
     match_expression: ($) => $._match,
-    _match: ($) => seq("match", field("value", $._expression), "{", commaSep1($.match_arm), "}"),
+    _match: ($) => seq("match", field("value", $._expression), "{", lineSep1($.match_arm), "}"),
     match_arm: ($) =>
       seq(field("pattern", $._pattern), optional(seq("if", $._expression)), "=>", field("value", $._expression)),
     closure_expression: ($) =>
