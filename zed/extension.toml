@@ -10,7 +10,7 @@ repository = "file:///Users/x/code/vizo/viso-vscode"
 # The grammar lives in this repository; `rev` is the commit Zed builds it from:
 # move it to the commit that last changed `tree-sitter-viso`.
 repository = "file:///Users/x/code/vizo/viso-vscode"
-rev = "69ce9c4c96b39614b7fb6c173c180f40f575a135"
+rev = "9d6a9ced0b6cde6df1c290d1b60e8ccc4cbb3689"
 path = "tree-sitter-viso"
 
 [language_servers.viso-lsp]
